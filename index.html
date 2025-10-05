@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP Filter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3a56d4;
+            --primary-light: #5a72e0;
+            --secondary: #6c757d;
+            --success: #28a745;
+            --warning: #dc3545;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --border-radius: 8px;
+            --transition: all 0.2s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: #f5f7fa;
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--dark);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: var(--secondary);
+            font-size: 1rem;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 1100px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            transition: var(--transition);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title i {
+            color: var(--primary);
+        }
+
+        .badge {
+            background: var(--primary);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: var(--transition);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(58, 86, 212, 0.1);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: var(--dark);
+            font-size: 0.9rem;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(58, 86, 212, 0.1);
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+        }
+
+        .btn-block {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-light);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #c82333;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #e0e0e0;
+            color: var(--secondary);
+        }
+
+        .btn-outline:hover {
+            background: #f8f9fa;
+        }
+
+        .btn-sm {
+            padding: 6px 10px;
+            font-size: 0.8rem;
+        }
+
+        .teams-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+        }
+
+        .team-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .team-item:last-child {
+            border-bottom: none;
+        }
+
+        .team-item:hover {
+            background: #f8f9fa;
+        }
+
+        .team-name {
+            font-weight: 500;
+        }
+
+        .team-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .output-content {
+            background: #f8f9fa;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .actions .btn {
+            flex: 1;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .filter-controls label {
+            font-weight: 500;
+            white-space: nowrap;
+            font-size: 0.9rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: var(--secondary);
+        }
+
+        .empty-state i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #dee2e6;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 18px;
+            border-radius: var(--border-radius);
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: var(--success);
+        }
+
+        .notification.error {
+            background: var(--warning);
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            color: var(--secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: var(--transition);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .char-count-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .char-count-group label {
+            font-weight: 500;
+            white-space: nowrap;
+            font-size: 0.9rem;
+        }
+
+        .char-count-input {
+            width: 80px;
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+        }
+
+        .blocklist-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .blocklist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .blocklist-item-content {
+            font-family: 'Consolas', monospace;
+            font-size: 0.8rem;
+            color: #475569;
+        }
+
+        .blocklist-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .blocklist-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .blocklist-input-group input {
+            flex: 1;
+        }
+
+        .blocklist-input-group .btn {
+            white-space: nowrap;
+        }
+
+        .server-group {
+            margin-bottom: 8px;
+        }
+
+        .server-name {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 4px;
+            padding: 4px 8px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            font-size: 0.7rem;
+        }
+
+        .server-ips {
+            padding-left: 16px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.8rem;
+        }
+
+        .toggle-section {
+            margin-bottom: 20px;
+        }
+
+        .toggle-btn {
+            width: 100%;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            padding: 16px;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #475569;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .toggle-btn:hover {
+            background: #f8f9fa;
+            border-color: #cbd5e1;
+        }
+
+        .toggle-btn i {
+            transition: transform 0.2s;
+        }
+
+        .toggle-btn.expanded i {
+            transform: rotate(180deg);
+        }
+
+        .team-database {
+            display: none;
+        }
+
+        .team-database.expanded {
+            display: block;
+        }
+
+        .processing-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .large-textarea {
+            min-height: 300px;
+        }
+
+        .results-section {
+            margin-top: 20px;
+        }
+
+        .blocklist-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: var(--border-radius);
+            font-size: 0.85rem;
+            color: #856404;
+        }
+
+        .blocklist-info.warning {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .blocklist-info.success {
+            background: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+
+        .server-header {
+            font-weight: bold;
+            color: var(--primary);
+            margin: 10px 0 5px 0;
+            padding: 5px;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+        .duplicated-badge {
+            background: #dc3545;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>IP Filter</h1>
+            <p class="subtitle">Filter IP addresses and domains by status and teams</p>
+        </header>
+
+        <div class="toggle-section">
+            <button class="toggle-btn" onclick="toggleTeamDatabase()">
+                <span>Team Database</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
+
+        <div class="main-grid">
+            <!-- Left Panel: Data Processing (Larger) -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-filter"></i> Data Processing</h2>
+                </div>
+                
+                <div class="input-group">
+                    <label for="inputText">Input Data</label>
+                    <textarea id="inputText" class="large-textarea" placeholder="Paste your data here..."></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label for="teamFilter">Filter by Team</label>
+                    <select id="teamFilter">
+                        <option value="all">All Teams</option>
+                    </select>
+                </div>
+
+                <div class="char-count-group">
+                    <label for="charCount">Random Characters:</label>
+                    <input type="number" id="charCount" class="char-count-input" value="8" min="1" max="20">
+                </div>
+
+                <div class="processing-controls">
+                    <button class="btn btn-primary" onclick="processData()">
+                        <i class="fas fa-play"></i> Extract Pass
+                    </button>
+                    <button class="btn btn-outline" onclick="processOnePerIP()">
+                        <i class="fas fa-layer-group"></i> One per IP
+                    </button>
+                    <button class="btn btn-outline" onclick="processRandomEmail()">
+                        <i class="fas fa-envelope"></i> Random Email
+                    </button>
+                    <button class="btn btn-outline" onclick="processByServer()">
+                        <i class="fas fa-server"></i> Group by Server
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel: Team Management -->
+            <div class="team-database" id="teamDatabase">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fas fa-database"></i> Team Database</h2>
+                        <span class="badge" id="dbStats">0</span>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="teamName">Team Name</label>
+                        <input type="text" id="teamName" placeholder="Enter team name">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="teamIPs">Servers & IPs</label>
+                        <textarea id="teamIPs" placeholder="server_name:ip"></textarea>
+                    </div>
+                    
+                    <div class="actions">
+                        <button class="btn btn-primary" onclick="addTeam()">
+                            <i class="fas fa-plus"></i> Add Team
+                        </button>
+                        <button class="btn btn-outline" onclick="resetDatabase()">
+                            <i class="fas fa-trash"></i> Reset All
+                        </button>
+                    </div>
+
+                    <div class="blocklist-section">
+                        <div class="input-group">
+                            <label>Auto-Detected Blocklist</label>
+                            <div class="blocklist-input-group">
+                                <input type="text" id="autoBlocklistInput" placeholder="Paste data to auto-detect blocklist">
+                                <button class="btn btn-primary" onclick="autoDetectBlocklist()">
+                                    <i class="fas fa-search"></i> Detect
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="teams-list" id="blocklistItems">
+                            <div class="empty-state">
+                                <i class="fas fa-ban"></i>
+                                <p>No items in blocklist</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="teams-list" id="teamsList">
+                        <div class="empty-state">
+                            <i class="fas fa-users"></i>
+                            <p>No teams added yet</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section - Full Width -->
+        <div class="card results-section" id="result" style="display: none;">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fas fa-list"></i> Results</h2>
+                <span class="badge" id="resultStats">0</span>
+            </div>
+
+            <div class="tabs">
+                <button class="tab" onclick="switchTab('randomEmail')">RETURN PATH</button>
+                <button class="tab" onclick="switchTab('randomEmailOnePerIP')">RETURN PATH (One per IP)</button>
+                <button class="tab" onclick="switchTab('byServer')">Group by Server</button>
+                <button class="tab" onclick="switchTab('byServerOnePerIP')">Group by Server (One per IP)</button>
+            </div>
+
+            <div id="all-tab" class="tab-content active">
+                <div class="output-content" id="output-all"></div>
+                <div class="blocklist-info" id="blocklist-info-all"></div>
+                <div class="actions">
+                    <button class="btn btn-outline" onclick="copyToClipboard('all')">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                    <button class="btn btn-warning" onclick="resetTabResults('all')">
+                        <i class="fas fa-undo"></i> Reset
+                    </button>
+                </div>
+            </div>
+
+            <div id="onePerIP-tab" class="tab-content">
+                <div class="output-content" id="output-onePerIP"></div>
+                <div class="blocklist-info" id="blocklist-info-onePerIP"></div>
+                <div class="actions">
+                    <button class="btn btn-outline" onclick="copyToClipboard('onePerIP')">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                    <button class="btn btn-warning" onclick="resetTabResults('onePerIP')">
+                        <i class="fas fa-undo"></i> Reset
+                    </button>
+                </div>
+            </div>
+
+            <div id="randomEmail-tab" class="tab-content">
+                <div class="output-content" id="output-randomEmail"></div>
+                <div class="blocklist-info" id="blocklist-info-randomEmail"></div>
+                <div class="actions">
+                    <button class="btn btn-outline" onclick="copyToClipboard('randomEmail')">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                    <button class="btn btn-warning" onclick="resetTabResults('randomEmail')">
+                        <i class="fas fa-undo"></i> Reset
+                    </button>
+                </div>
+            </div>
+
+            <div id="randomEmailOnePerIP-tab" class="tab-content">
+                <div class="output-content" id="output-randomEmailOnePerIP"></div>
+                <div class="blocklist-info" id="blocklist-info-randomEmailOnePerIP"></div>
+                <div class="actions">
+                    <button class="btn btn-outline" onclick="copyToClipboard('randomEmailOnePerIP')">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                    <button class="btn btn-warning" onclick="resetTabResults('randomEmailOnePerIP')">
+                        <i class="fas fa-undo"></i> Reset
+                    </button>
+                </div>
+            </div>
+
+            <div id="byServer-tab" class="tab-content">
+                <div class="output-content" id="output-byServer"></div>
+                <div class="blocklist-info" id="blocklist-info-byServer"></div>
+                <div class="actions">
+                    <button class="btn btn-outline" onclick="copyToClipboard('byServer')">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                    <button class="btn btn-warning" onclick="resetTabResults('byServer')">
+                        <i class="fas fa-undo"></i> Reset
+                    </button>
+                </div>
+            </div>
+
+            <div id="byServerOnePerIP-tab" class="tab-content">
+                <div class="output-content" id="output-byServerOnePerIP"></div>
+                <div class="blocklist-info" id="blocklist-info-byServerOnePerIP"></div>
+                <div class="actions">
+                    <button class="btn btn-outline" onclick="copyToClipboard('byServerOnePerIP')">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                    <button class="btn btn-warning" onclick="resetTabResults('byServerOnePerIP')">
+                        <i class="fas fa-undo"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        let editingIndex = -1;
+
+        // Check if this is the first time the app is loaded
+        if (!localStorage.getItem('firstRunDone')) {
+            localStorage.setItem('ipTeams', JSON.stringify([]));
+            localStorage.setItem('globalBlocklist', JSON.stringify([]));
+            localStorage.setItem('firstRunDone', 'true'); // mark that reset was done once
+        }
+
+        // Load from storage
+        let teams = JSON.parse(localStorage.getItem('ipTeams')) || [];
+        let globalBlocklist = JSON.parse(localStorage.getItem('globalBlocklist')) || [];
+
+        function saveTeams() {
+            localStorage.setItem('ipTeams', JSON.stringify(teams));
+        }
+        
+        function saveBlocklist() {
+            localStorage.setItem('globalBlocklist', JSON.stringify(globalBlocklist));
+        }
+        
+        function loadTeams() {
+            teams = JSON.parse(localStorage.getItem('ipTeams')) || [];
+            globalBlocklist = JSON.parse(localStorage.getItem('globalBlocklist')) || [];
+            renderTeams();
+            renderBlocklist();
+            updateTeamFilter();
+        }
+        
+        function renderTeams() {
+            const teamsList = document.getElementById('teamsList');
+            const dbStats = document.getElementById('dbStats');
+            teamsList.innerHTML = '';
+            dbStats.textContent = teams.length;
+            
+            if (teams.length === 0) {
+                teamsList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <p>No teams added yet</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            teams.forEach((team, index) => {
+                const teamDiv = document.createElement('div');
+                teamDiv.className = 'team-item';
+                
+                teamDiv.innerHTML = `
+                    <div class="team-name">${team.name}</div>
+                    <div class="team-actions">
+                        <button class="btn btn-outline btn-sm" onclick="editTeam(${index})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="removeTeam(${index})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                teamsList.appendChild(teamDiv);
+            });
+        }
+        
+        function renderBlocklist() {
+            const blocklistItems = document.getElementById('blocklistItems');
+            blocklistItems.innerHTML = '';
+            
+            if (globalBlocklist.length === 0) {
+                blocklistItems.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-ban"></i>
+                        <p>No items in blocklist</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            globalBlocklist.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'team-item';
+                itemDiv.innerHTML = `
+                    <div class="team-name">${item}</div>
+                    <div class="team-actions">
+                        <button class="btn btn-outline btn-sm" onclick="removeFromBlocklist(${index})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                blocklistItems.appendChild(itemDiv);
+            });
+        }
+        
+        function updateTeamFilter() {
+            const teamFilter = document.getElementById('teamFilter');
+            teamFilter.innerHTML = '<option value="all">All Teams</option>';
+            
+            teams.forEach(team => {
+                const option = document.createElement('option');
+                option.value = team.name;
+                option.textContent = team.name;
+                teamFilter.appendChild(option);
+            });
+        }
+        
+        function autoDetectBlocklist() {
+            const input = document.getElementById('autoBlocklistInput').value.trim();
+            if (!input) {
+                showNotification('Please paste data to detect blocklist items', 'error');
+                return;
+            }
+            
+            // Extract domains and IPs that should be blocked
+            const lines = input.split('\n');
+            const detectedItems = new Set();
+            
+            lines.forEach(line => {
+                if (line.trim()) {
+                    // Extract domains
+                    const domainMatches = line.match(/([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}/g);
+                    if (domainMatches) {
+                        domainMatches.forEach(domain => {
+                            if (domain.length > 3) {
+                                detectedItems.add(domain.toLowerCase());
+                            }
+                        });
+                    }
+                    
+                    // Extract IPs
+                    const ipMatches = line.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g);
+                    if (ipMatches) {
+                        ipMatches.forEach(ip => {
+                            detectedItems.add(ip);
+                        });
+                    }
+                    
+                    // Extract common spam patterns
+                    const spamPatterns = line.match(/\b(spam|block|bad|malicious|suspicious)\.[a-zA-Z0-9.-]+\b/gi);
+                    if (spamPatterns) {
+                        spamPatterns.forEach(pattern => {
+                            detectedItems.add(pattern.toLowerCase());
+                        });
+                    }
+                }
+            });
+            
+            // Add detected items to blocklist
+            let addedCount = 0;
+            detectedItems.forEach(item => {
+                if (!globalBlocklist.includes(item)) {
+                    globalBlocklist.push(item);
+                    addedCount++;
+                }
+            });
+            
+            saveBlocklist();
+            renderBlocklist();
+            showNotification(`Added ${addedCount} items to blocklist`, 'success');
+            document.getElementById('autoBlocklistInput').value = '';
+        }
+        
+        function removeFromBlocklist(index) {
+            globalBlocklist.splice(index, 1);
+            saveBlocklist();
+            renderBlocklist();
+            showNotification('Item removed from blocklist', 'success');
+        }
+        
+        function addTeam() {
+            const teamName = document.getElementById('teamName').value.trim();
+            const teamIPsText = document.getElementById('teamIPs').value.trim();
+            
+            if (!teamName) {
+                showNotification('Please enter a team name', 'error');
+                return;
+            }
+            
+            const ips = teamIPsText.split('\n')
+                .map(ip => ip.trim())
+                .filter(ip => ip && ip.includes(':'));
+            
+            if (ips.length === 0) {
+                showNotification('Please enter valid server:ip entries', 'error');
+                return;
+            }
+            
+            if (editingIndex === -1) {
+                teams.push({ 
+                    name: teamName, 
+                    ips: ips
+                });
+                showNotification(`Team "${teamName}" added`, 'success');
+            } else {
+                teams[editingIndex] = { 
+                    name: teamName, 
+                    ips: ips
+                };
+                editingIndex = -1;
+                document.querySelector('button[onclick="addTeam()"]').innerHTML = '<i class="fas fa-plus"></i> Add Team';
+                showNotification(`Team "${teamName}" updated`, 'success');
+            }
+            
+            saveTeams();
+            renderTeams();
+            updateTeamFilter();
+            
+            document.getElementById('teamName').value = '';
+            document.getElementById('teamIPs').value = '';
+        }
+        
+        function editTeam(index) {
+            const team = teams[index];
+            document.getElementById('teamName').value = team.name;
+            document.getElementById('teamIPs').value = team.ips.join('\n');
+            editingIndex = index;
+            document.querySelector('button[onclick="addTeam()"]').innerHTML = '<i class="fas fa-save"></i> Update Team';
+        }
+        
+        function removeTeam(index) {
+            if (confirm('Delete this team?')) {
+                const teamName = teams[index].name;
+                teams.splice(index, 1);
+                saveTeams();
+                renderTeams();
+                updateTeamFilter();
+                showNotification(`Team "${teamName}" deleted`, 'success');
+            }
+        }
+        
+        function resetDatabase() {
+            if (confirm('Reset all teams and blocklist?')) {
+                teams = [];
+                globalBlocklist = [];
+                editingIndex = -1;
+                saveTeams();
+                saveBlocklist();
+                renderTeams();
+                renderBlocklist();
+                updateTeamFilter();
+                document.querySelector('button[onclick="addTeam()"]').innerHTML = '<i class="fas fa-plus"></i> Add Team';
+                showNotification('Database reset', 'success');
+            }
+        }
+        
+        function getTeamIPs() {
+            const selectedTeam = document.getElementById('teamFilter').value;
+            if (selectedTeam === 'all') return null;
+            
+            const team = teams.find(t => t.name === selectedTeam);
+            if (!team) return null;
+            
+            return team.ips.map(item => {
+                const parts = item.split(':');
+                return parts[parts.length - 1].trim();
+            });
+        }
+
+        function getTeamBlocklist() {
+            return globalBlocklist.length > 0 ? globalBlocklist : null;
+        }
+
+        function getTeamServers() {
+            const selectedTeam = document.getElementById('teamFilter').value;
+            if (selectedTeam === 'all') {
+                // Return all servers from all teams
+                const allServers = {};
+                teams.forEach(team => {
+                    team.ips.forEach(ipEntry => {
+                        const [server, ip] = ipEntry.split(':');
+                        if (!allServers[server]) {
+                            allServers[server] = [];
+                        }
+                        allServers[server].push(ip.trim());
+                    });
+                });
+                return allServers;
+            }
+            
+            const team = teams.find(t => t.name === selectedTeam);
+            if (!team) return null;
+            
+            const serverGroups = {};
+            team.ips.forEach(ipEntry => {
+                const [server, ip] = ipEntry.split(':');
+                if (!serverGroups[server]) {
+                    serverGroups[server] = [];
+                }
+                serverGroups[server].push(ip.trim());
+            });
+            
+            return serverGroups;
+        }
+
+        function generateRandomLetters(length = 8) {
+            const letters = 'abcdefghijklmnopqrstuvwxyz';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += letters.charAt(Math.floor(Math.random() * letters.length));
+            }
+            return result;
+        }
+
+        function isBlocked(ip, domain, blocklist) {
+            if (!blocklist) return false;
+            
+            return blocklist.some(blockedItem => {
+                if (ip === blockedItem) return true;
+                if (domain === blockedItem) return true;
+                if (domain.includes(blockedItem)) return true;
+                return false;
+            });
+        }
+
+        function updateBlocklistInfo(type, totalRecords, blockedCount) {
+            const infoElement = document.getElementById(`blocklist-info-${type}`);
+            if (blockedCount > 0) {
+                infoElement.innerHTML = `<i class="fas fa-shield-alt"></i> <strong>Blocklist Active:</strong> ${blockedCount} items were blocked from the results`;
+                infoElement.className = 'blocklist-info warning';
+            } else if (globalBlocklist.length > 0) {
+                infoElement.innerHTML = `<i class="fas fa-shield-alt"></i> <strong>Blocklist Ready:</strong> ${globalBlocklist.length} items in blocklist, but none matched this data`;
+                infoElement.className = 'blocklist-info success';
+            } else {
+                infoElement.innerHTML = `<i class="fas fa-info-circle"></i> No blocklist items configured`;
+                infoElement.className = 'blocklist-info';
+            }
+        }
+        
+        function processData() {
+            const inputText = document.getElementById('inputText').value;
+            const teamIPs = getTeamIPs();
+            const blocklist = getTeamBlocklist();
+            const lines = inputText.split('\n');
+            const passRecords = [];
+            let blockedCount = 0;
+            
+            lines.forEach(line => {
+                if (line.trim()) {
+                    const parts = line.split('\t');
+                    if (parts.length >= 5) {
+                        const ip = parts[0].trim();
+                        const domain = parts[1].trim();
+                        const status = parts[3].trim().toLowerCase();
+                        
+                        const ipInTeam = teamIPs === null || teamIPs.includes(ip);
+                        const isBlockedItem = isBlocked(ip, domain, blocklist);
+                        
+                        if (status === 'pass' && ipInTeam) {
+                            if (!isBlockedItem) {
+                                passRecords.push(`${ip};${domain}`);
+                            } else {
+                                blockedCount++;
+                            }
+                        }
+                    }
+                }
+            });
+            
+            const resultDiv = document.getElementById('result');
+            const outputAll = document.getElementById('output-all');
+            const resultStats = document.getElementById('resultStats');
+            
+            if (passRecords.length > 0 || blockedCount > 0) {
+                outputAll.textContent = passRecords.join('\n');
+                resultStats.textContent = passRecords.length;
+                resultDiv.style.display = 'block';
+                updateBlocklistInfo('all', passRecords.length, blockedCount);
+                processOnePerIP();
+                processRandomEmail();
+                processRandomEmailOnePerIP();
+                processByServer();
+                processByServerOnePerIP();
+                showNotification(`Found ${passRecords.length} pass records${blockedCount > 0 ? `, ${blockedCount} blocked` : ''}`, 'success');
+            } else {
+                outputAll.textContent = 'No records with "pass" status found';
+                resultStats.textContent = '0';
+                resultDiv.style.display = 'block';
+                updateBlocklistInfo('all', 0, 0);
+                showNotification('No pass records found', 'error');
+            }
+        }
+        
+        function processOnePerIP() {
+            const inputText = document.getElementById('inputText').value;
+            const teamIPs = getTeamIPs();
+            const blocklist = getTeamBlocklist();
+            const lines = inputText.split('\n');
+            const ipMap = new Map();
+            const onePerIPRecords = [];
+            let blockedCount = 0;
+            
+            lines.forEach(line => {
+                if (line.trim()) {
+                    const parts = line.split('\t');
+                    if (parts.length >= 5) {
+                        const ip = parts[0].trim();
+                        const domain = parts[1].trim();
+                        const status = parts[3].trim().toLowerCase();
+                        
+                        const ipInTeam = teamIPs === null || teamIPs.includes(ip);
+                        const isBlockedItem = isBlocked(ip, domain, blocklist);
+                        
+                        if (status === 'pass' && !ipMap.has(ip) && ipInTeam) {
+                            if (!isBlockedItem) {
+                                ipMap.set(ip, domain);
+                                onePerIPRecords.push(`${ip};${domain}`);
+                            } else {
+                                blockedCount++;
+                            }
+                        }
+                    }
+                }
+            });
+            
+            const outputOnePerIP = document.getElementById('output-onePerIP');
+            outputOnePerIP.textContent = onePerIPRecords.join('\n');
+            updateBlocklistInfo('onePerIP', onePerIPRecords.length, blockedCount);
+        }
+
+        function processRandomEmail() {
+            const inputText = document.getElementById('inputText').value;
+            const teamIPs = getTeamIPs();
+            const blocklist = getTeamBlocklist();
+            const charCount = parseInt(document.getElementById('charCount').value) || 8;
+            const lines = inputText.split('\n');
+            const randomEmailRecords = [];
+            let blockedCount = 0;
+            
+            lines.forEach(line => {
+                if (line.trim()) {
+                    const parts = line.split('\t');
+                    if (parts.length >= 5) {
+                        const ip = parts[0].trim();
+                        const domain = parts[1].trim();
+                        const status = parts[3].trim().toLowerCase();
+                        
+                        const ipInTeam = teamIPs === null || teamIPs.includes(ip);
+                        const isBlockedItem = isBlocked(ip, domain, blocklist);
+                        
+                        if (status === 'pass' && ipInTeam) {
+                            if (!isBlockedItem) {
+                                const randomPart = generateRandomLetters(charCount);
+                                const emailFormat = `${ip};noropley_${randomPart}@${domain}`;
+                                randomEmailRecords.push(emailFormat);
+                            } else {
+                                blockedCount++;
+                            }
+                        }
+                    }
+                }
+            });
+            
+            const outputRandomEmail = document.getElementById('output-randomEmail');
+            outputRandomEmail.textContent = randomEmailRecords.join('\n');
+            updateBlocklistInfo('randomEmail', randomEmailRecords.length, blockedCount);
+        }
+
+        function processRandomEmailOnePerIP() {
+            const inputText = document.getElementById('inputText').value;
+            const teamIPs = getTeamIPs();
+            const blocklist = getTeamBlocklist();
+            const charCount = parseInt(document.getElementById('charCount').value) || 8;
+            const lines = inputText.split('\n');
+            const ipMap = new Map();
+            const randomEmailOnePerIPRecords = [];
+            let blockedCount = 0;
+            
+            lines.forEach(line => {
+                if (line.trim()) {
+                    const parts = line.split('\t');
+                    if (parts.length >= 5) {
+                        const ip = parts[0].trim();
+                        const domain = parts[1].trim();
+                        const status = parts[3].trim().toLowerCase();
+                        
+                        const ipInTeam = teamIPs === null || teamIPs.includes(ip);
+                        const isBlockedItem = isBlocked(ip, domain, blocklist);
+                        
+                        if (status === 'pass' && !ipMap.has(ip) && ipInTeam) {
+                            if (!isBlockedItem) {
+                                ipMap.set(ip, domain);
+                                const randomPart = generateRandomLetters(charCount);
+                                const emailFormat = `${ip};noropley_${randomPart}@${domain}`;
+                                randomEmailOnePerIPRecords.push(emailFormat);
+                            } else {
+                                blockedCount++;
+                            }
+                        }
+                    }
+                }
+            });
+            
+            const outputRandomEmailOnePerIP = document.getElementById('output-randomEmailOnePerIP');
+            outputRandomEmailOnePerIP.textContent = randomEmailOnePerIPRecords.join('\n');
+            updateBlocklistInfo('randomEmailOnePerIP', randomEmailOnePerIPRecords.length, blockedCount);
+        }
+
+    function processByServer() {
+            const inputText = document.getElementById('inputText').value;
+            const teamServers = getTeamServers();
+            const blocklist = getTeamBlocklist();
+            const charCount = parseInt(document.getElementById('charCount').value) || 8;
+            const lines = inputText.split('\n');
+            const serverRecords = {};
+            let blockedCount = 0;
+            let totalRecords = 0;
+            
+            // Process ALL records and group by server - NO DUPLICATE DETECTION
+            if (teamServers) {
+                Object.keys(teamServers).forEach(server => {
+                    teamServers[server].forEach(teamIp => {
+                        lines.forEach(line => {
+                            if (line.trim()) {
+                                const parts = line.split('\t');
+                                if (parts.length >= 5) {
+                                    const ip = parts[0].trim();
+                                    const domain = parts[1].trim();
+                                    const status = parts[3].trim().toLowerCase();
+                                    
+                                    const isBlockedItem = isBlocked(ip, domain, blocklist);
+                                    
+                                    if (status === 'pass' && ip === teamIp && !isBlockedItem) {
+                                        if (!serverRecords[server]) {
+                                            serverRecords[server] = [];
+                                        }
+                                        
+                                        const randomPart = generateRandomLetters(charCount);
+                                        const emailFormat = `${ip};noropley_${randomPart}@${domain}`;
+                                        
+                                        serverRecords[server].push(emailFormat);
+                                        totalRecords++;
+                                    } else if (status === 'pass' && ip === teamIp && isBlockedItem) {
+                                        blockedCount++;
+                                    }
+                                }
+                            }
+                        });
+                    });
+                });
+            }
+            
+            const outputByServer = document.getElementById('output-byServer');
+            let outputText = '';
+            
+            Object.keys(serverRecords).forEach(server => {
+                outputText += `=== ${server} ===\n`;
+                serverRecords[server].forEach(record => {
+                    outputText += record + '\n';
+                });
+                outputText += '\n';
+            });
+            
+            outputByServer.textContent = outputText.trim();
+            updateBlocklistInfo('byServer', totalRecords, blockedCount);
+        }
+
+       function processByServerOnePerIP() {
+            const inputText = document.getElementById('inputText').value;
+            const teamServers = getTeamServers();
+            const blocklist = getTeamBlocklist();
+            const charCount = parseInt(document.getElementById('charCount').value) || 8;
+            const lines = inputText.split('\n');
+            const serverRecords = {};
+            let blockedCount = 0;
+            let totalRecords = 0;
+            
+            // First pass: analyze domain usage across all IPs
+            const domainUsage = new Map(); // domain -> count of IPs using it
+            const ipDomains = new Map(); // ip -> array of available domains
+            
+            // Build domain usage map and IP domains map
+            if (teamServers) {
+                Object.keys(teamServers).forEach(server => {
+                    const ipMap = new Map();
+                    teamServers[server].forEach(teamIp => {
+                        lines.forEach(line => {
+                            if (line.trim()) {
+                                const parts = line.split('\t');
+                                if (parts.length >= 5) {
+                                    const ip = parts[0].trim();
+                                    const domain = parts[1].trim();
+                                    const status = parts[3].trim().toLowerCase();
+                                    
+                                    const isBlockedItem = isBlocked(ip, domain, blocklist);
+                                    
+                                    if (status === 'pass' && ip === teamIp && !ipMap.has(ip) && !isBlockedItem) {
+                                        ipMap.set(ip, domain);
+                                        // Count domain usage
+                                        domainUsage.set(domain, (domainUsage.get(domain) || 0) + 1);
+                                        
+                                        // Add domain to IP's available domains
+                                        if (!ipDomains.has(ip)) {
+                                            ipDomains.set(ip, []);
+                                        }
+                                        ipDomains.get(ip).push(domain);
+                                    }
+                                }
+                            }
+                        });
+                    });
+                });
+            }
+            
+            // Second pass: assign domains to IPs with priority logic
+            const assignedDomains = new Map(); // ip -> assigned domain
+            const usedDomains = new Set(); // domains that have been assigned
+            
+            // First, assign domains to IPs that have only one domain
+            ipDomains.forEach((domains, ip) => {
+                if (domains.length === 1) {
+                    const domain = domains[0];
+                    assignedDomains.set(ip, domain);
+                    usedDomains.add(domain);
+                }
+            });
+            
+            // Then, assign domains to remaining IPs
+            ipDomains.forEach((domains, ip) => {
+                if (!assignedDomains.has(ip)) {
+                    // Find an available domain that's not already used
+                    const availableDomain = domains.find(domain => !usedDomains.has(domain));
+                    if (availableDomain) {
+                        assignedDomains.set(ip, availableDomain);
+                        usedDomains.add(availableDomain);
+                    } else if (domains.length > 0) {
+                        // If no unique domain available, use the first one and mark as duplicated
+                        assignedDomains.set(ip, domains[0]);
+                    }
+                }
+            });
+            
+            // Third pass: generate output
+            if (teamServers) {
+                Object.keys(teamServers).forEach(server => {
+                    const ipMap = new Map();
+                    teamServers[server].forEach(teamIp => {
+                        lines.forEach(line => {
+                            if (line.trim()) {
+                                const parts = line.split('\t');
+                                if (parts.length >= 5) {
+                                    const ip = parts[0].trim();
+                                    const domain = parts[1].trim();
+                                    const status = parts[3].trim().toLowerCase();
+                                    
+                                    const isBlockedItem = isBlocked(ip, domain, blocklist);
+                                    
+                                    if (status === 'pass' && ip === teamIp && !ipMap.has(ip)) {
+                                        if (!isBlockedItem) {
+                                            ipMap.set(ip, domain);
+                                            if (!serverRecords[server]) {
+                                                serverRecords[server] = [];
+                                            }
+                                            
+                                            const assignedDomain = assignedDomains.get(ip);
+                                            if (assignedDomain === domain) {
+                                                const randomPart = generateRandomLetters(charCount);
+                                                const isDuplicated = domainUsage.get(domain) > 1;
+                                                const duplicateMarker = isDuplicated ? ` <span class="duplicated-badge">duplicated</span>` : '';
+                                                const emailFormat = `${ip};noropley_${randomPart}@${domain}${duplicateMarker}`;
+                                                
+                                                // Only add if not already present
+                                                if (!serverRecords[server].some(record => record.includes(`${ip};noropley_`))) {
+                                                    serverRecords[server].push(emailFormat);
+                                                    totalRecords++;
+                                                }
+                                            }
+                                        } else {
+                                            blockedCount++;
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    });
+                });
+            }
+            
+            const outputByServerOnePerIP = document.getElementById('output-byServerOnePerIP');
+            let outputText = '';
+            
+            Object.keys(serverRecords).forEach(server => {
+                outputText += `=== ${server} ===\n`;
+                serverRecords[server].forEach(record => {
+                    outputText += record + '\n';
+                });
+                outputText += '\n';
+            });
+            
+            outputByServerOnePerIP.innerHTML = outputText.trim();
+            updateBlocklistInfo('byServerOnePerIP', totalRecords, blockedCount);
+        }
+        
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function copyToClipboard(type) {
+            const output = document.getElementById(`output-${type}`);
+            const textArea = document.createElement('textarea');
+            textArea.value = output.textContent;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            showNotification('Copied to clipboard', 'success');
+        }
+        
+        // New function to reset individual tab results AND input data
+function resetTabResults(type) {
+    // Clear the output for this specific tab
+    const output = document.getElementById(`output-${type}`);
+    const blocklistInfo = document.getElementById(`blocklist-info-${type}`);
+    
+    output.textContent = '';
+    blocklistInfo.innerHTML = '';
+    blocklistInfo.className = 'blocklist-info';
+    
+    // Clear the main input data
+    document.getElementById('inputText').value = '';
+    
+    showNotification(`Reset ${type} results and input data`, 'success');
+}
+        
+        function toggleTeamDatabase() {
+            const teamDatabase = document.getElementById('teamDatabase');
+            const toggleBtn = document.querySelector('.toggle-btn');
+            
+            teamDatabase.classList.toggle('expanded');
+            toggleBtn.classList.toggle('expanded');
+        }
+        
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        function resetResults() {
+            // Clear input text
+            document.getElementById('inputText').value = '';
+
+            // Clear all outputs
+            document.querySelectorAll('.output-content').forEach(out => out.textContent = '');
+
+            // Clear blocklist info messages
+            document.querySelectorAll('.blocklist-info').forEach(info => {
+                info.innerHTML = '';
+                info.className = 'blocklist-info';
+            });
+
+            // Hide result section
+            document.getElementById('result').style.display = 'none';
+
+            showNotification('Input and results reset', 'success');
+        }
+
+        // Initialize
+        window.onload = function() {
+            loadTeams();
+        };
+    </script>
+</body>
+</html>
