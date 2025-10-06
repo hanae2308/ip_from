@@ -1282,141 +1282,119 @@
             updateBlocklistInfo('byServer', totalRecords, blockedCount);
         }
 
-       function processByServerOnePerIP() {
-            const inputText = document.getElementById('inputText').value;
-            const teamServers = getTeamServers();
-            const blocklist = getTeamBlocklist();
-            const charCount = parseInt(document.getElementById('charCount').value) || 8;
-            const lines = inputText.split('\n');
-            const serverRecords = {};
-            let blockedCount = 0;
-            let totalRecords = 0;
-            
-            // First pass: analyze domain usage across all IPs
-            const domainUsage = new Map(); // domain -> count of IPs using it
-            const ipDomains = new Map(); // ip -> array of available domains
-            
-            // Build domain usage map and IP domains map
-            if (teamServers) {
-                Object.keys(teamServers).forEach(server => {
-                    const ipMap = new Map();
-                    teamServers[server].forEach(teamIp => {
-                        lines.forEach(line => {
-                            if (line.trim()) {
-                                const parts = line.split('\t');
-                                if (parts.length >= 5) {
-                                    const ip = parts[0].trim();
-                                    const domain = parts[1].trim();
-                                    const status = parts[3].trim().toLowerCase();
-                                    
-                                    const isBlockedItem = isBlocked(ip, domain, blocklist);
-                                    
-                                    if (status === 'pass' && ip === teamIp && !ipMap.has(ip) && !isBlockedItem) {
-                                        ipMap.set(ip, domain);
-                                        // Count domain usage
-                                        domainUsage.set(domain, (domainUsage.get(domain) || 0) + 1);
-                                        
-                                        // Add domain to IP's available domains
-                                        if (!ipDomains.has(ip)) {
-                                            ipDomains.set(ip, []);
-                                        }
-                                        ipDomains.get(ip).push(domain);
-                                    }
-                                }
+     function processByServerOnePerIP() {
+    const inputText = document.getElementById('inputText').value;
+    const teamServers = getTeamServers();
+    const blocklist = getTeamBlocklist();
+    const charCount = parseInt(document.getElementById('charCount').value) || 8;
+    const lines = inputText.split('\n');
+    const serverRecords = {};
+    let blockedCount = 0;
+    let totalRecords = 0;
+    
+    if (!teamServers) return;
+    
+    // First, collect all available domains for each IP
+    const ipDomainsMap = new Map(); // ip -> Set of available domains
+    
+    Object.keys(teamServers).forEach(server => {
+        teamServers[server].forEach(teamIp => {
+            lines.forEach(line => {
+                if (line.trim()) {
+                    const parts = line.split('\t');
+                    if (parts.length >= 5) {
+                        const ip = parts[0].trim();
+                        const domain = parts[1].trim();
+                        const status = parts[3].trim().toLowerCase();
+                        
+                        const isBlockedItem = isBlocked(ip, domain, blocklist);
+                        
+                        if (status === 'pass' && ip === teamIp && !isBlockedItem) {
+                            if (!ipDomainsMap.has(ip)) {
+                                ipDomainsMap.set(ip, new Set());
                             }
-                        });
-                    });
-                });
-            }
-            
-            // Second pass: assign domains to IPs with priority logic
-            const assignedDomains = new Map(); // ip -> assigned domain
-            const usedDomains = new Set(); // domains that have been assigned
-            
-            // First, assign domains to IPs that have only one domain
-            ipDomains.forEach((domains, ip) => {
-                if (domains.length === 1) {
-                    const domain = domains[0];
-                    assignedDomains.set(ip, domain);
-                    usedDomains.add(domain);
-                }
-            });
-            
-            // Then, assign domains to remaining IPs
-            ipDomains.forEach((domains, ip) => {
-                if (!assignedDomains.has(ip)) {
-                    // Find an available domain that's not already used
-                    const availableDomain = domains.find(domain => !usedDomains.has(domain));
-                    if (availableDomain) {
-                        assignedDomains.set(ip, availableDomain);
-                        usedDomains.add(availableDomain);
-                    } else if (domains.length > 0) {
-                        // If no unique domain available, use the first one and mark as duplicated
-                        assignedDomains.set(ip, domains[0]);
+                            ipDomainsMap.get(ip).add(domain);
+                        } else if (status === 'pass' && ip === teamIp && isBlockedItem) {
+                            blockedCount++;
+                        }
                     }
                 }
             });
-            
-            // Third pass: generate output
-            if (teamServers) {
-                Object.keys(teamServers).forEach(server => {
-                    const ipMap = new Map();
-                    teamServers[server].forEach(teamIp => {
-                        lines.forEach(line => {
-                            if (line.trim()) {
-                                const parts = line.split('\t');
-                                if (parts.length >= 5) {
-                                    const ip = parts[0].trim();
-                                    const domain = parts[1].trim();
-                                    const status = parts[3].trim().toLowerCase();
-                                    
-                                    const isBlockedItem = isBlocked(ip, domain, blocklist);
-                                    
-                                    if (status === 'pass' && ip === teamIp && !ipMap.has(ip)) {
-                                        if (!isBlockedItem) {
-                                            ipMap.set(ip, domain);
-                                            if (!serverRecords[server]) {
-                                                serverRecords[server] = [];
-                                            }
-                                            
-                                            const assignedDomain = assignedDomains.get(ip);
-                                            if (assignedDomain === domain) {
-                                                const randomPart = generateRandomLetters(charCount);
-                                                const isDuplicated = domainUsage.get(domain) > 1;
-                                                const duplicateMarker = isDuplicated ? ` <span class="duplicated-badge">duplicated</span>` : '';
-                                                const emailFormat = `${ip};noropley_${randomPart}@${domain}${duplicateMarker}`;
-                                                
-                                                // Only add if not already present
-                                                if (!serverRecords[server].some(record => record.includes(`${ip};noropley_`))) {
-                                                    serverRecords[server].push(emailFormat);
-                                                    totalRecords++;
-                                                }
-                                            }
-                                        } else {
-                                            blockedCount++;
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    });
-                });
-            }
-            
-            const outputByServerOnePerIP = document.getElementById('output-byServerOnePerIP');
-            let outputText = '';
-            
-            Object.keys(serverRecords).forEach(server => {
-                outputText += `=== ${server} ===\n`;
-                serverRecords[server].forEach(record => {
-                    outputText += record + '\n';
-                });
-                outputText += '\n';
-            });
-            
-            outputByServerOnePerIP.innerHTML = outputText.trim();
-            updateBlocklistInfo('byServerOnePerIP', totalRecords, blockedCount);
+        });
+    });
+    
+    // Count how many IPs use each domain
+    const domainUsage = new Map(); // domain -> count of IPs using it
+    ipDomainsMap.forEach((domains, ip) => {
+        domains.forEach(domain => {
+            domainUsage.set(domain, (domainUsage.get(domain) || 0) + 1);
+        });
+    });
+    
+    // Assign the best domain for each IP (prefer least used domains)
+    const assignedDomains = new Map(); // ip -> assigned domain
+    
+    ipDomainsMap.forEach((domains, ip) => {
+        // Convert Set to Array and sort by usage count (least used first)
+        const domainsArray = Array.from(domains);
+        domainsArray.sort((a, b) => {
+            const countA = domainUsage.get(a) || 0;
+            const countB = domainUsage.get(b) || 0;
+            return countA - countB;
+        });
+        
+        // Assign the least used domain
+        if (domainsArray.length > 0) {
+            assignedDomains.set(ip, domainsArray[0]);
         }
+    });
+    
+    // Now generate the output grouped by server
+    Object.keys(teamServers).forEach(server => {
+        const processedIPs = new Set(); // Track IPs we've already processed for this server
+        
+        teamServers[server].forEach(teamIp => {
+            if (!processedIPs.has(teamIp) && assignedDomains.has(teamIp)) {
+                const assignedDomain = assignedDomains.get(teamIp);
+                const isDuplicated = (domainUsage.get(assignedDomain) || 0) > 1;
+                
+                if (!serverRecords[server]) {
+                    serverRecords[server] = [];
+                }
+                
+                const randomPart = generateRandomLetters(charCount);
+                const emailFormat = `${teamIp};noropley_${randomPart}@${assignedDomain}`;
+                
+                serverRecords[server].push(emailFormat);
+                processedIPs.add(teamIp);
+                totalRecords++;
+            }
+        });
+    });
+    
+    const outputByServerOnePerIP = document.getElementById('output-byServerOnePerIP');
+    let outputText = '';
+    
+    Object.keys(serverRecords).forEach(server => {
+        outputText += `=== ${server} ===\n`;
+        serverRecords[server].forEach(record => {
+            // Check if this domain is duplicated across different IPs
+            const ip = record.split(';')[0];
+            const domain = assignedDomains.get(ip);
+            const isDuplicated = (domainUsage.get(domain) || 0) > 1;
+            
+            if (isDuplicated) {
+                outputText += record + ' <span class="duplicated-badge">duplicated</span>\n';
+            } else {
+                outputText += record + '\n';
+            }
+        });
+        outputText += '\n';
+    });
+    
+    outputByServerOnePerIP.innerHTML = outputText.trim();
+    updateBlocklistInfo('byServerOnePerIP', totalRecords, blockedCount);
+}
         
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
