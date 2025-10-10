@@ -1282,7 +1282,7 @@
             updateBlocklistInfo('byServer', totalRecords, blockedCount);
         }
 
-     function processByServerOnePerIP() {
+function processByServerOnePerIP() {
     const inputText = document.getElementById('inputText').value;
     const teamServers = getTeamServers();
     const blocklist = getTeamBlocklist();
@@ -1294,8 +1294,8 @@
     
     if (!teamServers) return;
     
-    // First, collect all available domains for each IP
-    const ipDomainsMap = new Map(); // ip -> Set of available domains
+    // STEP 1: Collect all available domains for each IP
+    const ipDomainsMap = new Map();
     
     Object.keys(teamServers).forEach(server => {
         teamServers[server].forEach(teamIp => {
@@ -1323,40 +1323,64 @@
         });
     });
     
-    // Count how many IPs use each domain
-    const domainUsage = new Map(); // domain -> count of IPs using it
-    ipDomainsMap.forEach((domains, ip) => {
-        domains.forEach(domain => {
-            domainUsage.set(domain, (domainUsage.get(domain) || 0) + 1);
-        });
-    });
-    
-    // Assign the best domain for each IP (prefer least used domains)
-    const assignedDomains = new Map(); // ip -> assigned domain
+    // STEP 2: Identify single-domain IPs vs multi-domain IPs
+    const singleDomainIPs = new Map();
+    const multiDomainIPs = new Map();
     
     ipDomainsMap.forEach((domains, ip) => {
-        // Convert Set to Array and sort by usage count (least used first)
-        const domainsArray = Array.from(domains);
-        domainsArray.sort((a, b) => {
-            const countA = domainUsage.get(a) || 0;
-            const countB = domainUsage.get(b) || 0;
-            return countA - countB;
-        });
-        
-        // Assign the least used domain
-        if (domainsArray.length > 0) {
-            assignedDomains.set(ip, domainsArray[0]);
+        if (domains.size === 1) {
+            // IP has only ONE domain choice
+            const onlyDomain = Array.from(domains)[0];
+            singleDomainIPs.set(ip, onlyDomain);
+        } else {
+            // IP has multiple domain choices
+            multiDomainIPs.set(ip, Array.from(domains));
         }
     });
     
-    // Now generate the output grouped by server
+    // STEP 3: Count how many single-domain IPs share each domain
+    const singleDomainUsage = new Map();
+    singleDomainIPs.forEach((domain, ip) => {
+        singleDomainUsage.set(domain, (singleDomainUsage.get(domain) || 0) + 1);
+    });
+    
+    // STEP 4: Assign domains with priority
+    const assignedDomains = new Map();
+    const usedDomains = new Set();
+    
+    // Phase 1: Single-domain IPs get their ONLY domain
+    singleDomainIPs.forEach((domain, ip) => {
+        assignedDomains.set(ip, domain);
+        usedDomains.add(domain);
+    });
+    
+    // Phase 2: Multi-domain IPs choose from remaining domains
+    multiDomainIPs.forEach((domains, ip) => {
+        // Try to find an unused domain first
+        let chosenDomain = null;
+        for (const domain of domains) {
+            if (!usedDomains.has(domain)) {
+                chosenDomain = domain;
+                break;
+            }
+        }
+        
+        // If all preferred domains are taken, randomly choose one
+        if (!chosenDomain) {
+            chosenDomain = domains[Math.floor(Math.random() * domains.length)];
+        }
+        
+        assignedDomains.set(ip, chosenDomain);
+        usedDomains.add(chosenDomain);
+    });
+    
+    // STEP 5: Generate output with proper formatting
     Object.keys(teamServers).forEach(server => {
-        const processedIPs = new Set(); // Track IPs we've already processed for this server
+        const processedIPs = new Set();
         
         teamServers[server].forEach(teamIp => {
             if (!processedIPs.has(teamIp) && assignedDomains.has(teamIp)) {
                 const assignedDomain = assignedDomains.get(teamIp);
-                const isDuplicated = (domainUsage.get(assignedDomain) || 0) > 1;
                 
                 if (!serverRecords[server]) {
                     serverRecords[server] = [];
@@ -1365,29 +1389,37 @@
                 const randomPart = generateRandomLetters(charCount);
                 const emailFormat = `${teamIp};noropley_${randomPart}@${assignedDomain}`;
                 
-                serverRecords[server].push(emailFormat);
+                // Check formatting rules
+                const isSingleDomainIP = singleDomainIPs.has(teamIp);
+                const isDomainSharedBySingleIPs = (singleDomainUsage.get(assignedDomain) || 0) > 1;
+                
+                if (isSingleDomainIP) {
+                    if (isDomainSharedBySingleIPs) {
+                        // Single-domain IP sharing domain with other single-domain IPs
+                        serverRecords[server].push(emailFormat + ' <span class="duplicated-badge">duplicated</span>');
+                    } else {
+                        // Single-domain IP with unique domain (just show in red)
+                        serverRecords[server].push('<span style="color: red">' + emailFormat + '</span>');
+                    }
+                } else {
+                    // Multi-domain IP (normal formatting)
+                    serverRecords[server].push(emailFormat);
+                }
+                
                 processedIPs.add(teamIp);
                 totalRecords++;
             }
         });
     });
     
+    // STEP 6: Create final output
     const outputByServerOnePerIP = document.getElementById('output-byServerOnePerIP');
     let outputText = '';
     
     Object.keys(serverRecords).forEach(server => {
         outputText += `=== ${server} ===\n`;
         serverRecords[server].forEach(record => {
-            // Check if this domain is duplicated across different IPs
-            const ip = record.split(';')[0];
-            const domain = assignedDomains.get(ip);
-            const isDuplicated = (domainUsage.get(domain) || 0) > 1;
-            
-            if (isDuplicated) {
-                outputText += record + ' <span class="duplicated-badge">duplicated</span>\n';
-            } else {
-                outputText += record + '\n';
-            }
+            outputText += record + '\n';
         });
         outputText += '\n';
     });
@@ -1395,7 +1427,6 @@
     outputByServerOnePerIP.innerHTML = outputText.trim();
     updateBlocklistInfo('byServerOnePerIP', totalRecords, blockedCount);
 }
-        
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
