@@ -432,46 +432,7 @@
             font-size: 0.8rem;
         }
 
-        .toggle-section {
-            margin-bottom: 20px;
-        }
-
-        .toggle-btn {
-            width: 100%;
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: var(--border-radius);
-            padding: 16px;
-            font-size: 1rem;
-            font-weight: 500;
-            color: #475569;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .toggle-btn:hover {
-            background: #f8f9fa;
-            border-color: #cbd5e1;
-        }
-
-        .toggle-btn i {
-            transition: transform 0.2s;
-        }
-
-        .toggle-btn.expanded i {
-            transform: rotate(180deg);
-        }
-
-        .team-database {
-            display: none;
-        }
-
-        .team-database.expanded {
-            display: block;
-        }
+       
 
         .processing-controls {
             display: grid;
@@ -535,7 +496,7 @@
             <p class="subtitle">Filter IP addresses and domains by status and teams</p>
         </header>
 
-    
+        
 
         <div class="main-grid">
             <!-- Left Panel: Data Processing (Larger) -->
@@ -573,7 +534,6 @@
             <div class="team-database" id="teamDatabase">
                 <div class="card">
                     <div class="card-header">
-                        <h2 class="card-title"><i class="fas fa-database"></i> Team Database</h2>
                         <span class="badge" id="dbStats">0</span>
                     </div>
 
